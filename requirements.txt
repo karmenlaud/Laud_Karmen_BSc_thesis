@@ -1,0 +1,7 @@
+opencv-python
+numpy
+osmnx
+matplotlib
+shapely
+rosbags
+paddleocr
