@@ -62,13 +62,13 @@ class Particle:
 # ===================== CONSTANTS =====================
 
 DEFAULT_PRTICLE_COUNT = 2000
-MIN_PARTICLES = 300
+RAND_PARTICLES = 30
 
 # Constants regarding the re-weighting
-PENALTY = 0.5
+PENALTY = 0.3
 DISTANCE_DECAY = 200
-WEIGHT_FULL_MATCH = 0.1
-WEIGHT_PARTIAL_MATCH = 0.05
+WEIGHT_FULL_MATCH = 0.3
+WEIGHT_PARTIAL_MATCH = 0.15
 
 MATCH_THRESHOLD = 0.85
 
@@ -157,9 +157,12 @@ class ParticleFilter:
             self.particles.clear()
             self.generate_particles()
 
-    def generate_particles(self):
+    def generate_particles(self, count = None):
         """ Generates random particles across edges. """
-        for _ in range(self.particle_count):
+        if count is None:
+            count = self.particle_count
+
+        for _ in range(count):
             start, end = random.choice(self.edges)
             length = self.edge_length[(start, end)]
 
@@ -310,6 +313,7 @@ class ParticleFilter:
 
         # Step 3: normalise weights
         sum_w = weights.sum()
+        max_w = np.max(weights)
         if sum_w == 0:
             # All particles have zero weight, make them uniform
             weights = np.ones(len(self.particles)) / len(self.particles)
@@ -329,15 +333,11 @@ class ParticleFilter:
             p.edge_dist = min(p.max_length, max(0, p.edge_dist))
 
             p.direction = np.random.choice([1, -1])
-            p.weight = 0.5
+            p.weight /= max_w
             new_particles.append(p)
         
-        # We find the new count of particles based on the amount of edges our re-sample inhabits
-        #particle_count = max(int(len(edges)/len(self.edges) * self.particle_count_initial), MIN_PARTICLES)
-        #self.particle_count = particle_count
-
-        # Overwrite old particles
-        self.particles[:] = new_particles[:]
+        self.particles[:] = new_particles[:self.particle_count-RAND_PARTICLES]
+        self.generate_particles(RAND_PARTICLES)
         
 
     def get_position(self, osm_map):

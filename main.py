@@ -117,12 +117,12 @@ def main():
             for connection, timestamp, rawdata in bag.messages(connections=connections):
                 # Deserialize ROS1 sensor_msgs/Image
                 msg = bag.deserialize(rawdata, connection.msgtype)
-                
-                ocr_frames_count += 1
-                if ocr_frames_count % frame_interval != 0:
-                    continue
-
+            
                 if connection.topic == topic_name_cam:
+
+                    ocr_frames_count += 1
+                    if ocr_frames_count % frame_interval != 0:
+                        continue
                     
                     # Build numpy image (8-bit Bayer)
                     img = np.frombuffer(msg.data, dtype=np.uint8).reshape((msg.height, msg.width))
@@ -152,17 +152,16 @@ def main():
 
                         if render_between:
                             OSM.render(pf.particles, str(output_dir /f"resample_nr_{i}_before.png"))
-                        
-                        pf.re_sample()
 
                         if true_position is not None:
                             estimate = pf.get_position(OSM)
                             error = haversine(true_position, estimate)
-                            print(error)
                             with open(str(output_dir /f"errors.cvs"), 'a') as file:
-                                file.write(f"{error}, {frame_time}\n")
+                                file.write(f"{error}, {frame_time}, ocr\n")
 
-                        if render_between and False:
+                        pf.re_sample()
+
+                        if render_between:
                             OSM.render(pf.particles, str(output_dir /f"resample_nr_{i}_after.png"))
                         
                         pf.check_weights()
@@ -189,6 +188,12 @@ def main():
                     d_dist = d_time*av_speed
 
                     pf.predict(d_dist)
+
+                    if true_position is not None:
+                        estimate = pf.get_position(OSM)
+                        error = haversine(true_position, estimate)
+                        with open(str(output_dir /f"errors.cvs"), 'a') as file:
+                            file.write(f"{error}, {frame_time}, speed\n")
                     
                     last_timestamp = timestamp
                     last_speed = speed
