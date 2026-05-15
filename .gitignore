@@ -1,3 +1,5 @@
 .venv
 frozen_east_text_detection.pb
 testfail.bag
+results
+__pycache__
