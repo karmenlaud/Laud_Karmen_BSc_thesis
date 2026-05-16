@@ -65,10 +65,10 @@ DEFAULT_PRTICLE_COUNT = 2000
 RAND_PARTICLES = 30
 
 # Constants regarding the re-weighting
-PENALTY = 0.3
+PENALTY = 0.5
 DISTANCE_DECAY = 200
-WEIGHT_FULL_MATCH = 0.3
-WEIGHT_PARTIAL_MATCH = 0.15
+WEIGHT_FULL_MATCH = 0.5
+WEIGHT_PARTIAL_MATCH = 0.3
 
 MATCH_THRESHOLD = 0.85
 
@@ -197,7 +197,6 @@ class ParticleFilter:
 
         for particle in self.particles:
             u, v = particle.edge
-            edge_data = self.G[u][v][0]
 
             if u in street_nodes and v in street_nodes:
                 particle.weight += WEIGHT_FULL_MATCH
@@ -313,7 +312,7 @@ class ParticleFilter:
 
         # Step 3: normalise weights
         sum_w = weights.sum()
-        max_w = np.max(weights)
+        max_w = weights.max()
         if sum_w == 0:
             # All particles have zero weight, make them uniform
             weights = np.ones(len(self.particles)) / len(self.particles)
@@ -341,16 +340,38 @@ class ParticleFilter:
         
 
     def get_position(self, osm_map):
-        """ Returns position of best particle in latitude and longitude.
-        Args:
-            osm_map (OSMMap): map helper for geometry lookup
-        Returns:
-            tuple: (latitude, longitude)
-        """
-        best = max(self.particles, key=lambda p: p.weight)
+        """Returns averaged position of all highest-weight particles."""
 
-        x, y = osm_map.edge_position(best.edge[0], best.edge[1], best.edge_dist)
-        lon, lat = self.transformer.transform(x, y)
+        if not self.particles:
+            return None
+
+        # Find highest weight
+        best_weight = max(p.weight for p in self.particles)
+
+        # Collect all particles with highest weight
+        best_particles = [
+            p for p in self.particles
+            if p.weight == best_weight
+        ]
+
+        # Average their map coordinates
+        x_sum = 0.0
+        y_sum = 0.0
+
+        for p in best_particles:
+            x, y = osm_map.edge_position(
+                p.edge[0],
+                p.edge[1],
+                p.edge_dist
+            )
+
+            x_sum += x
+            y_sum += y
+
+        avg_x = x_sum / len(best_particles)
+        avg_y = y_sum / len(best_particles)
+
+        lon, lat = self.transformer.transform(avg_x, avg_y)
 
         return lon, lat
 

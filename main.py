@@ -182,7 +182,7 @@ def main():
                         last_speed = speed
                         continue
 
-                    d_time = (timestamp - last_timestamp)/ 1e9
+                    d_time = (timestamp - last_timestamp)
                     av_speed = (last_speed+speed)/2
                     
                     d_dist = d_time*av_speed
