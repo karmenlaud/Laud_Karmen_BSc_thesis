@@ -62,7 +62,7 @@ class Particle:
 # ===================== CONSTANTS =====================
 
 DEFAULT_PRTICLE_COUNT = 2000
-RAND_PARTICLES = 30
+RAND_PARTICLES = 0.005
 
 # Constants regarding the re-weighting
 PENALTY = 0.5
@@ -89,6 +89,7 @@ class ParticleFilter:
         self.particle_count = particle_count # particle count might change during resampling
         self.low_weight_counter = 0 # used to trigger resample if filter decays
         self.particle_count_initial = particle_count
+        self.rand_particles = int(np.ceil(particle_count*RAND_PARTICLES))
         self.G = G
 
         # graph is projected, transforming is to get the longitude and latitude of the position estimate
@@ -335,12 +336,19 @@ class ParticleFilter:
             p.weight /= max_w
             new_particles.append(p)
         
-        self.particles[:] = new_particles[:self.particle_count-RAND_PARTICLES]
-        self.generate_particles(RAND_PARTICLES)
+        self.particles[:] = new_particles[:self.particle_count-self.rand_particles]
+        self.generate_particles(self.rand_particles)
         
 
     def get_position(self, osm_map):
-        """Returns averaged position of all highest-weight particles."""
+        """Returns averaged position of all highest-weight particles.
+
+        Args:
+            osm_map (OSMMap): map helper for geometry lookup
+
+        Returns:
+            tuple: (latitude, longitude)
+        """
 
         if not self.particles:
             return None

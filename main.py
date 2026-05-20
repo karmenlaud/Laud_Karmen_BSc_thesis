@@ -86,7 +86,7 @@ def main():
         output_dir = REPO_ROOT / "results" / f"{particle_count}" / f"{bag_path.stem}_results"
         output_dir.mkdir(parents=True, exist_ok=True) 
 
-        with open(str(output_dir /f"errors.cvs"), 'w') as file:
+        with open(str(output_dir /f"errors.csv"), 'w') as file:
             file.write("")
 
         # Making the initial render
@@ -156,7 +156,7 @@ def main():
                         if true_position is not None:
                             estimate = pf.get_position(OSM)
                             error = haversine(true_position, estimate)
-                            with open(str(output_dir /f"errors.cvs"), 'a') as file:
+                            with open(str(output_dir /f"errors.csv"), 'a') as file:
                                 file.write(f"{error}, {frame_time}, ocr\n")
 
                         pf.re_sample()
@@ -192,7 +192,7 @@ def main():
                     if true_position is not None:
                         estimate = pf.get_position(OSM)
                         error = haversine(true_position, estimate)
-                        with open(str(output_dir /f"errors.cvs"), 'a') as file:
+                        with open(str(output_dir /f"errors.csv"), 'a') as file:
                             file.write(f"{error}, {frame_time}, speed\n")
                     
                     last_timestamp = timestamp
@@ -204,7 +204,7 @@ def main():
         print("Processing results: ", text_results)
         print(f"Processed {processed_frames} frames in {duration:.2f} seconds ")
 
-        with open(str(output_dir /f"errors.cvs"), 'a') as file:
+        with open(str(output_dir /f"errors.csv"), 'a') as file:
             file.write(f"\nProcessed {processed_frames} frames in {duration:.2f} seconds ")
         
 
